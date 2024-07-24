@@ -1,0 +1,23 @@
+Requerimientos:
+* JDK 17 o superior
+* Maven 3.6.3
+* Git para poder clonar repositorio de Github
+
+1 - Ir a la ruta local donde se desea clonar el repositorio.
+
+2 - Abrir terminal (Powershell, Git Bash, cmd, etc) en la ruta específica donde se quiere descargar el proyecto.
+
+3 - Ejecutar dentro de la terminal la siguiente línea:
+	git clone https://github.com/glaime/personas.git
+	
+4 - Una vez clonado el repositorio abrir el archivo descargado que contiene el codigo fuente.
+
+5 - Abrir terminal (Powershell, Git Bash, cmd, etc) dentro del archivo (que contiene el codigo fuente) y ejecutar la siguiente línea:
+    mvn clean install
+	
+6 - Una vez finalizada la ejecución del comando anterior debe figurar "BUILD SUCCESS" en la terminal.
+
+7 - Una vez finalizado el paso anterior se generará un nuevo archivo llamado "target", ingresar a ese archivo, abrir terminal y ejecutar siguiente línea:
+	java -jar reba-0.0.1-SNAPSHOT.jar
+
+8 - Una vez ejecutado el comando anterior abrir navegador e ir a la ruta http://localhost:8080/api/swagger-ui/index.html#/ para ver swagger del proyecto.
