@@ -35,7 +35,9 @@ public class PersonaMapper {
     public static PersonaEntity toEntity(PersonaRequestDTO persona, IdPersonaEntity idPersona){
         PersonaEntity personaEntity = new PersonaEntity();
         if(persona != null && idPersona != null){
-            personaEntity.setIdPersona(idPersona);
+            personaEntity.setNroDocumento(idPersona.getNroDocumento());
+            personaEntity.setPais(idPersona.getPais());
+            personaEntity.setTipoDocumento(idPersona.getTipoDocumento());
             personaEntity.setNombre(persona.getNombre());
             personaEntity.setApellido(persona.getApellido());
             personaEntity.setFechaNacimiento(persona.getFechaNacimiento());
@@ -49,9 +51,9 @@ public class PersonaMapper {
         if(entity != null){
             ModelMapper mapper = new ModelMapper();
             mapper.typeMap(PersonaEntity.class, PersonaResponseDTO.class).addMappings(mappr -> {
-                mappr.map(src -> src.getIdPersona().getNroDocumento(), PersonaResponseDTO::setNroDocumento);
-                mappr.map(src -> src.getIdPersona().getTipoDocumento().getDescipcion(), PersonaResponseDTO::setTipoDocumento);
-                mappr.map(src -> src.getIdPersona().getPais().getDescipcion(), PersonaResponseDTO::setPais);
+                mappr.map(src -> src.getNroDocumento(), PersonaResponseDTO::setNroDocumento);
+                mappr.map(src -> src.getTipoDocumento().getDescipcion(), PersonaResponseDTO::setTipoDocumento);
+                mappr.map(src -> src.getPais().getDescipcion(), PersonaResponseDTO::setPais);
             });
             personaResponseDTO = mapper.map(entity, PersonaResponseDTO.class);
         }

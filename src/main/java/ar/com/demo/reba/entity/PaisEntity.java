@@ -24,4 +24,8 @@ public class PaisEntity implements Serializable {
     @Column(name = "DESCRIPCION", nullable = false, length = 50)
     private String descipcion;
 
+    public PaisEntity(Long id){
+        this.id = id;
+    }
+
 }
