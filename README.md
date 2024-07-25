@@ -21,3 +21,17 @@ Requerimientos:
 	java -jar reba-0.0.1-SNAPSHOT.jar
 
 8 - Una vez ejecutado el comando anterior abrir navegador e ir a la ruta http://localhost:8080/api/swagger-ui/index.html#/ para ver swagger del proyecto.
+
+
+En caso de querer ingresar a la base de datos (H2) ingresar en la siguiente url:
+
+http://localhost:8080/api/h2-console
+
+con los siguientes datos:
+
+Saved Settings: Generic H2(Embedded)
+Setting Name: Generic H2 (Embedded)
+Driver Class: org.h2.Driver
+JDBC URL: jdbc:h2:mem:testdb
+User Name: sa
+Password: password
