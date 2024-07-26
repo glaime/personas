@@ -3,6 +3,7 @@ package ar.com.demo.reba.service.impl;
 import ar.com.demo.reba.dto.request.PersonaRequestDTO;
 import ar.com.demo.reba.dto.request.RelacionPersonasRequestDTO;
 import ar.com.demo.reba.dto.response.PersonaResponseDTO;
+import ar.com.demo.reba.dto.response.PorcentajeResponseDTO;
 import ar.com.demo.reba.dto.response.RelacionPersonasResponseDTO;
 import ar.com.demo.reba.entity.*;
 import ar.com.demo.reba.exception.BusinessException;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -199,5 +201,29 @@ public class PersonaServiceImpl implements PersonaService {
         }else {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public List<PorcentajeResponseDTO> getStats() {
+        List<PorcentajeResponseDTO> response = new ArrayList<>();
+        long totalPersonas = this.repository.count();
+        String promedio;
+        if(totalPersonas > 0l){
+            List<PaisEntity> paises = this.paisRepository.findAll();
+            for(PaisEntity pais : paises){
+                promedio = "0";
+                long totalPersonasByPais = this.repository.countByPais(pais);
+                PorcentajeResponseDTO dto = new PorcentajeResponseDTO();
+                dto.setCountry(pais.getDescipcion());
+                if(totalPersonasByPais > 0l){
+                    Double res = Double.valueOf(totalPersonasByPais * 100 / totalPersonas);
+                    promedio = String.valueOf(res);
+                }
+                dto.setPercentage(promedio);
+                response.add(dto);
+            }
+
+        }
+        return response;
     }
 }

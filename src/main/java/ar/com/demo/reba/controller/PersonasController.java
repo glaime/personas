@@ -4,6 +4,7 @@ import ar.com.demo.reba.dto.request.RelacionPersonasRequestDTO;
 import ar.com.demo.reba.dto.response.PersonaResponseDTO;
 import ar.com.demo.reba.dto.response.ErrorResponseDTO;
 import ar.com.demo.reba.dto.request.PersonaRequestDTO;
+import ar.com.demo.reba.dto.response.PorcentajeResponseDTO;
 import ar.com.demo.reba.dto.response.RelacionPersonasResponseDTO;
 import ar.com.demo.reba.exception.BusinessException;
 import ar.com.demo.reba.service.PersonaService;

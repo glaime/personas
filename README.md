@@ -22,6 +22,8 @@ Requerimientos:
 
 8 - Una vez ejecutado el comando anterior abrir navegador e ir a la ruta http://localhost:8080/api/swagger-ui/index.html#/ para ver swagger del proyecto.
 
+Nota: Los formatos de fecha son dd-MM-yyyy
+
 
 En caso de querer ingresar a la base de datos (H2) ingresar en la siguiente url:
 
@@ -35,3 +37,33 @@ Driver Class: org.h2.Driver
 JDBC URL: jdbc:h2:mem:testdb
 User Name: sa
 Password: password
+
+
+La base de datos está precargada de la siguiente manera:
+
+-- PAIS
+
+| ID | DESCRIPCION |
+|----|-------------|
+|  1 | Argentina   |
+|  2 | Paraguay    |
+|  3 | Perú        |
+|  4 | Bolivia     |
+|  5 | Venezuela   |
+|  6 | Brasil      |
+
+
+-- TIPO_DOC
+
+| ID | DESCRIPCION |
+|----|-------------|
+|  1 | DNI         |
+|  2 | CUIL        |
+|  3 | CUIT        |
+
+
+-- TIPO_RELACION
+
+| ID | DESCRIPCION |
+|----|-------------|
+|  1 | PADRE       |
