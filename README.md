@@ -1,4 +1,4 @@
-Servicio publicado en la web (con errores que se están corrigiendo):
+Servicio publicado en la web:
 
 Swagger URL: https://springboot-app-personas-5d9d3a9e6b6c.herokuapp.com/api/swagger-ui/index.html#/
 
