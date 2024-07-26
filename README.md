@@ -2,7 +2,7 @@ Servicio publicado en la web:
 
 Swagger URL: https://springboot-app-personas-5d9d3a9e6b6c.herokuapp.com/api/swagger-ui/index.html#/
 
-Requerimientos:
+Requerimientos para configurar de manera local:
 * JDK 17 o superior
 * Maven 3.6.3
 * Git para poder clonar repositorio de Github
