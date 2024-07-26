@@ -3,6 +3,7 @@ package ar.com.demo.reba.service.impl;
 import ar.com.demo.reba.dto.request.PersonaRequestDTO;
 import ar.com.demo.reba.dto.request.RelacionPersonasRequestDTO;
 import ar.com.demo.reba.dto.response.PersonaResponseDTO;
+import ar.com.demo.reba.dto.response.PorcentajeResponseDTO;
 import ar.com.demo.reba.dto.response.RelacionPersonasResponseDTO;
 import ar.com.demo.reba.entity.*;
 import ar.com.demo.reba.exception.BusinessException;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -130,7 +132,20 @@ public class PersonaServiceImpl implements PersonaService {
         this.validarPersona(body, accion);
         IdPersonaEntity idPersona = PersonaMapper.buildIdPersonaEntity(body.getNroDocumento(), body.getIdTipoDoc(), body.getIdPais());
         this.validarPaisyTipoDoc(idPersona);
-        PersonaEntity persona = this.repository.save(PersonaMapper.toEntity(body, idPersona));
+        PersonaEntity persona = PersonaMapper.toEntity(body, idPersona);
+        if(accion.equalsIgnoreCase("create")){
+            Integer rowsAffected = this.repository.createPersona(persona.getNombre(), persona.getApellido(), persona.getTipoDocumento().getId(),
+                    persona.getNroDocumento(), persona.getPais().getId(), persona.getFechaNacimiento(), persona.getNroCel(), persona.getNroAlt());
+            if(rowsAffected == 0){
+                throw new BusinessException(500, "No se pudo insertar la persona.");
+            }
+        }else{
+            Integer rowsAffected = this.repository.updatePersona(persona.getNombre(), persona.getApellido(), persona.getFechaNacimiento(),
+                    persona.getNroCel(), persona.getNroAlt(), persona.getTipoDocumento().getId(), persona.getNroDocumento(), persona.getPais().getId());
+            if(rowsAffected == 0){
+                throw new BusinessException(500, "No se pudo actualizar la persona.");
+            }
+        }
         return PersonaMapper.toDto(persona);
     }
 
@@ -138,13 +153,12 @@ public class PersonaServiceImpl implements PersonaService {
     @Transactional
     public void deleteById(String nroDoc, Long idTipoDoc, Long idPais) throws BusinessException {
         if(nroDoc != null && !nroDoc.trim().isEmpty() && idTipoDoc != null && idTipoDoc > 0L && idPais != null && idPais > 0L){
-            Optional<PersonaEntity> optPersona = this.getPersonaById(nroDoc, idTipoDoc, idPais);
-            if(optPersona.isPresent()){
-                IdPersonaEntity idPersona = PersonaMapper.buildIdPersonaEntity(nroDoc, idTipoDoc, idPais);
-                this.repository.deleteById(idPersona);
-            }else{
+                Integer rowsDeleted = this.repository.deletePersona(nroDoc, idTipoDoc, idPais);
+            if(rowsDeleted == 0){
                 throw new BusinessException(404, "No se encontró registro de personas con los datos ingresados.");
             }
+        }else{
+            throw new BusinessException(400, "Los campos nroDoc, idTipoDoc, idPais no pueden ser nulos.");
         }
     }
 
@@ -199,5 +213,29 @@ public class PersonaServiceImpl implements PersonaService {
         }else {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public List<PorcentajeResponseDTO> getStats() {
+        List<PorcentajeResponseDTO> response = new ArrayList<>();
+        long totalPersonas = this.repository.count();
+        String promedio;
+        if(totalPersonas > 0l){
+            List<PaisEntity> paises = this.paisRepository.findAll();
+            for(PaisEntity pais : paises){
+                promedio = "0";
+                long totalPersonasByPais = this.repository.countByPais(pais);
+                PorcentajeResponseDTO dto = new PorcentajeResponseDTO();
+                dto.setCountry(pais.getDescipcion());
+                if(totalPersonasByPais > 0l){
+                    Double res = Double.valueOf(totalPersonasByPais * 100 / totalPersonas);
+                    promedio = String.valueOf(res);
+                }
+                dto.setPercentage(promedio);
+                response.add(dto);
+            }
+
+        }
+        return response;
     }
 }

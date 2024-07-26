@@ -43,7 +43,7 @@ public class RelacionServiceImpl implements RelacionService {
                 padreSegundo2 = this.getPadre(padrePersona2.get().getNroDocumento(),
                         padrePersona2.get().getTipoDocumento().getId(), padrePersona2.get().getPais().getId());
             }
-            if(persona1.isEmpty() || persona2.isEmpty()){
+            if(!persona1.isPresent() || !persona2.isPresent()){
                 throw new BusinessException(400, "Una de las personas ingresadas no se encuentra registrada.");
             }
 
