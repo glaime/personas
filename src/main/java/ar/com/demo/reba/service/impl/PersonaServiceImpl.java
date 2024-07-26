@@ -1,17 +1,15 @@
 package ar.com.demo.reba.service.impl;
 
 import ar.com.demo.reba.dto.request.PersonaRequestDTO;
+import ar.com.demo.reba.dto.request.RelacionPersonasRequestDTO;
 import ar.com.demo.reba.dto.response.PersonaResponseDTO;
-import ar.com.demo.reba.entity.IdPersonaEntity;
-import ar.com.demo.reba.entity.PaisEntity;
-import ar.com.demo.reba.entity.PersonaEntity;
-import ar.com.demo.reba.entity.TipoDocumentoEntity;
+import ar.com.demo.reba.dto.response.RelacionPersonasResponseDTO;
+import ar.com.demo.reba.entity.*;
 import ar.com.demo.reba.exception.BusinessException;
-import ar.com.demo.reba.repository.PaisRepository;
-import ar.com.demo.reba.repository.PersonaRepository;
-import ar.com.demo.reba.repository.TipoDocumentoRepository;
+import ar.com.demo.reba.repository.*;
 import ar.com.demo.reba.service.PersonaService;
 import ar.com.demo.reba.service.mapper.PersonaMapper;
+import ar.com.demo.reba.service.mapper.RelacionMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,12 +26,17 @@ public class PersonaServiceImpl implements PersonaService {
     private final PersonaRepository repository;
     private final PaisRepository paisRepository;
     private final TipoDocumentoRepository tipoDocumentoRepository;
+    private final TipoRelacionRepository tipoRelacionRepository;
+    private final RelacionPersonaRepository relacionPersonaRepository;
 
-    public PersonaServiceImpl(PersonaRepository repository, PaisRepository paisRepository, TipoDocumentoRepository tipoDocumentoRepository) {
+    public PersonaServiceImpl(PersonaRepository repository, PaisRepository paisRepository, TipoDocumentoRepository tipoDocumentoRepository,
+                              TipoRelacionRepository tipoRelacionRepository, RelacionPersonaRepository relacionPersonaRepository) {
         super();
         this.repository = repository;
         this.paisRepository = paisRepository;
         this.tipoDocumentoRepository = tipoDocumentoRepository;
+        this.tipoRelacionRepository = tipoRelacionRepository;
+        this.relacionPersonaRepository = relacionPersonaRepository;
     }
 
 
@@ -57,12 +60,7 @@ public class PersonaServiceImpl implements PersonaService {
     @Transactional
     public PersonaResponseDTO create(PersonaRequestDTO body) throws BusinessException {
         try{
-            PersonaResponseDTO response;
-            this.validarPersona(body, "create");
-            IdPersonaEntity idPersona = PersonaMapper.buildIdPersonaEntity(body.getNroDocumento(), body.getIdTipoDoc(), body.getIdPais());
-            PersonaEntity persona = this.repository.save(PersonaMapper.toEntity(body, this.validarPaisyTipoDoc(idPersona)));
-            response = PersonaMapper.toDto(persona);
-            return response;
+            return this.validAndSaveAndBuildResponseDTO(body, "create");
         } catch (BusinessException ex) {
             throw new BusinessException(ex.getCode(), ex.getMessage());
         }
@@ -87,21 +85,19 @@ public class PersonaServiceImpl implements PersonaService {
 
 
     private IdPersonaEntity validarPaisyTipoDoc(IdPersonaEntity idPersona) throws BusinessException {
-        IdPersonaEntity idPersonaEntity = new IdPersonaEntity();
-        idPersonaEntity.setNroDocumento(idPersona.getNroDocumento());
         Optional<PaisEntity> optPais = this.paisRepository.findById(idPersona.getPais().getId());
         if(optPais.isPresent()){
-            idPersonaEntity.setPais(optPais.get());
+            idPersona.setPais(optPais.get());
         }else{
             throw new BusinessException(404, "El país ingresado no existe.");
         }
         Optional<TipoDocumentoEntity> optTipoDocumento = this.tipoDocumentoRepository.findById(idPersona.getTipoDocumento().getId());
         if(optTipoDocumento.isPresent()){
-            idPersonaEntity.setTipoDocumento(optTipoDocumento.get());
+            idPersona.setTipoDocumento(optTipoDocumento.get());
         }else{
             throw new BusinessException(404, "El Tipo Documento ingresado no existe.");
         }
-        return idPersonaEntity;
+        return idPersona;
     }
 
     private int calcularEdad(Date fechaNacimiento){
@@ -120,10 +116,7 @@ public class PersonaServiceImpl implements PersonaService {
             PersonaResponseDTO response;
             Optional<PersonaEntity> optionalPersona = this.getPersonaById(body.getNroDocumento(), body.getIdTipoDoc(), body.getIdPais());
             if(optionalPersona.isPresent()){
-                this.validarPersona(body, "update");
-                IdPersonaEntity idPersona = PersonaMapper.buildIdPersonaEntity(body.getNroDocumento(), body.getIdTipoDoc(), body.getIdPais());
-                PersonaEntity persona = this.repository.save(PersonaMapper.toEntity(body, this.validarPaisyTipoDoc(idPersona)));
-                response = PersonaMapper.toDto(persona);
+                response = this.validAndSaveAndBuildResponseDTO(body, "update");
             }else {
                 throw new BusinessException(404, "No existe persona con los datos ingresados.");
             }
@@ -133,27 +126,63 @@ public class PersonaServiceImpl implements PersonaService {
         }
     }
 
+    private PersonaResponseDTO validAndSaveAndBuildResponseDTO(PersonaRequestDTO body, String accion) throws BusinessException {
+        this.validarPersona(body, accion);
+        IdPersonaEntity idPersona = PersonaMapper.buildIdPersonaEntity(body.getNroDocumento(), body.getIdTipoDoc(), body.getIdPais());
+        this.validarPaisyTipoDoc(idPersona);
+        PersonaEntity persona = this.repository.save(PersonaMapper.toEntity(body, idPersona));
+        return PersonaMapper.toDto(persona);
+    }
+
     @Override
     @Transactional
     public void deleteById(String nroDoc, Long idTipoDoc, Long idPais) throws BusinessException {
         if(nroDoc != null && !nroDoc.trim().isEmpty() && idTipoDoc != null && idTipoDoc > 0L && idPais != null && idPais > 0L){
             Optional<PersonaEntity> optPersona = this.getPersonaById(nroDoc, idTipoDoc, idPais);
             if(optPersona.isPresent()){
-                this.repository.deleteById(optPersona.get().getIdPersona());
+                IdPersonaEntity idPersona = PersonaMapper.buildIdPersonaEntity(nroDoc, idTipoDoc, idPais);
+                this.repository.deleteById(idPersona);
             }else{
                 throw new BusinessException(404, "No se encontró registro de personas con los datos ingresados.");
             }
         }
     }
 
+    @Override
+    @Transactional
+    public RelacionPersonasResponseDTO createRelacionPersonas(String nroDocPadre, String nroDocHijo, RelacionPersonasRequestDTO body) throws BusinessException {
+        RelacionPersonasEntity relacionPersonas = new RelacionPersonasEntity();
+        Optional<PersonaEntity> optPadre = this.getPersonaById(nroDocPadre, body.getIdTipoDocPadre(), body.getIdPaisPadre());
+        if(optPadre.isPresent()){
+            relacionPersonas.setPersonaPadre(optPadre.get());
+        }else{
+            throw new BusinessException(404, "No se encontró registros de la persona declarada como padre.");
+        }
+        Optional<PersonaEntity> optHijo = this.getPersonaById(nroDocHijo, body.getIdTipoDocHijo(), body.getIdPaisHijo());
+        if(optHijo.isPresent()){
+            relacionPersonas.setPersonaHijo(optHijo.get());
+        }else{
+            throw new BusinessException(404, "No se encontró registros de la persona declarada como hij@.");
+        }
+        //ID 1 = PADRE
+        Optional<TipoRelacionEntity> optTipoRelacion = this.tipoRelacionRepository.findById(1L);
+        if(optTipoRelacion.isPresent()){
+            relacionPersonas.setRelacion(optTipoRelacion.get());
+        }else {
+            throw new BusinessException(404, "No se encontró el tipo de relación.");
+        }
+
+        return RelacionMapper.toDto(this.relacionPersonaRepository.save(relacionPersonas));
+
+    }
 
 
-    private Optional<PersonaEntity> getPersonaById(String nroDoc, Long idTipoDoc, Long idPais){
+    @Override
+    public Optional<PersonaEntity> getPersonaById(String nroDoc, Long idTipoDoc, Long idPais){
 
         IdPersonaEntity idPersona = PersonaMapper.buildIdPersonaEntity(nroDoc, idTipoDoc, idPais);
 
         Optional<PersonaEntity> optPersona = this.repository.findById(idPersona);
-
         if(optPersona.isPresent()){
             Optional<PaisEntity> pais = this.paisRepository.findById(idPais);
             if(pais.isPresent()){
@@ -163,7 +192,9 @@ public class PersonaServiceImpl implements PersonaService {
             if(tipoDocumento.isPresent()){
                 idPersona.setTipoDocumento(tipoDocumento.get());
             }
-            optPersona.get().setIdPersona(idPersona);
+            optPersona.get().setNroDocumento(optPersona.get().getNroDocumento());
+            optPersona.get().setTipoDocumento(idPersona.getTipoDocumento());
+            optPersona.get().setPais(idPersona.getPais());
             return optPersona;
         }else {
             return Optional.empty();

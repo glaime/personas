@@ -13,20 +13,15 @@ import java.io.Serializable;
 @NoArgsConstructor
 @Getter
 @Setter
-@Table(name = "TIPO_DOC")
-public class TipoDocumentoEntity implements Serializable {
-
+@Table(name = "TIPO_RELACION")
+public class TipoRelacionEntity implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID")
     private Long id;
 
-    @Column(name = "DESCRIPCION", nullable = false, length = 20)
+    @Column(name = "DESCRIPCION", nullable = false, length = 50)
     private String descipcion;
-
-    public TipoDocumentoEntity(Long id){
-        this.id = id;
-    }
 
 }

@@ -2,14 +2,12 @@ package ar.com.demo.reba.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Set;
 
 @Entity
 @AllArgsConstructor
@@ -17,10 +15,23 @@ import java.util.Date;
 @Getter
 @Setter
 @Table(name = "PERSONA")
+@IdClass(IdPersonaEntity.class)
+@EqualsAndHashCode
 public class PersonaEntity implements Serializable {
 
-    @EmbeddedId
-    private IdPersonaEntity idPersona;
+    @Id
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ID_TIPO_DOC", nullable = false)
+    private TipoDocumentoEntity tipoDocumento;
+
+    @Id
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ID_PAIS", nullable = false)
+    private PaisEntity pais;
+
+    @Id
+    @Column(name = "NRO_DOCUMENTO", nullable = false, length = 50)
+    private String nroDocumento;
 
     @Column(name = "NOMBRE", nullable = false, length = 100)
     private String nombre;

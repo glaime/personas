@@ -1,8 +1,10 @@
 package ar.com.demo.reba.controller;
 
+import ar.com.demo.reba.dto.request.RelacionPersonasRequestDTO;
 import ar.com.demo.reba.dto.response.PersonaResponseDTO;
 import ar.com.demo.reba.dto.response.ErrorResponseDTO;
 import ar.com.demo.reba.dto.request.PersonaRequestDTO;
+import ar.com.demo.reba.dto.response.RelacionPersonasResponseDTO;
 import ar.com.demo.reba.exception.BusinessException;
 import ar.com.demo.reba.service.PersonaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -138,6 +140,8 @@ public class PersonasController {
     @Operation(summary = "Eliminar persona")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful operation"),
+            @ApiResponse(responseCode = "404", description = "Not Found",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class)))
     })
     public ResponseEntity<Object> deleteById(@PathVariable("nroDoc") String nroDoc, @PathVariable("idTipoDoc") Long idTipoDoc, @PathVariable("idPais") Long idPais){
         log.debug("Petición para eliminar persona");
@@ -157,6 +161,36 @@ public class PersonasController {
                     ErrorResponseDTO.builder().codigo(500).mensaje(ex.getMessage()).build(),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @Operation(summary = "Insertar relacion persona - padre")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful operation",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PersonaResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Bad Request",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponseDTO.class)))
+    })
+    @PostMapping("/{nroDocPadre}/padre/{nroDocHijo}")
+    public ResponseEntity<Object> createRelacionPersonas(@PathVariable("nroDocPadre") String nroDocPadre,
+                                                         @PathVariable("nroDocHijo") String nroDocHijo,
+                                                         @Valid @RequestBody RelacionPersonasRequestDTO body){
+        log.debug("Petición para insertar relacion persona - padre");
+        RelacionPersonasResponseDTO relacionCreated = new RelacionPersonasResponseDTO();
+        try {
+            relacionCreated = this.service.createRelacionPersonas(nroDocPadre, nroDocHijo, body);
+            return new ResponseEntity<>(relacionCreated, HttpStatus.OK);
+        } catch (BusinessException ex){
+        log.error("Ocurrió un error al intentar insertar relacion persona - padre");
+        return new ResponseEntity<>(
+                ErrorResponseDTO.builder().codigo(ex.getCode()).mensaje(ex.getMessage()).build(),
+                HttpStatus.BAD_REQUEST);
+        } catch (Exception ex){
+            log.error("Ocurrió un error al intentar insertar relacion persona - padre");
+            return new ResponseEntity<>(
+                    ErrorResponseDTO.builder().codigo(500).mensaje(ex.getMessage()).build(),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
     }
 
 }
