@@ -133,10 +133,18 @@ public class PersonaServiceImpl implements PersonaService {
         IdPersonaEntity idPersona = PersonaMapper.buildIdPersonaEntity(body.getNroDocumento(), body.getIdTipoDoc(), body.getIdPais());
         this.validarPaisyTipoDoc(idPersona);
         PersonaEntity persona = PersonaMapper.toEntity(body, idPersona);
-        Integer rowsAffected = this.repository.createPersona(persona.getNombre(), persona.getApellido(), persona.getTipoDocumento().getId(),
-                persona.getNroDocumento(), persona.getPais().getId(), persona.getFechaNacimiento(), persona.getNroCel(), persona.getNroAlt());
-        if(rowsAffected == 0){
-            throw new BusinessException(500, "No se pudo insertar la persona.");
+        if(accion.equalsIgnoreCase("create")){
+            Integer rowsAffected = this.repository.createPersona(persona.getNombre(), persona.getApellido(), persona.getTipoDocumento().getId(),
+                    persona.getNroDocumento(), persona.getPais().getId(), persona.getFechaNacimiento(), persona.getNroCel(), persona.getNroAlt());
+            if(rowsAffected == 0){
+                throw new BusinessException(500, "No se pudo insertar la persona.");
+            }
+        }else{
+            Integer rowsAffected = this.repository.updatePersona(persona.getNombre(), persona.getApellido(), persona.getFechaNacimiento(),
+                    persona.getNroCel(), persona.getNroAlt(), persona.getTipoDocumento().getId(), persona.getNroDocumento(), persona.getPais().getId());
+            if(rowsAffected == 0){
+                throw new BusinessException(500, "No se pudo actualizar la persona.");
+            }
         }
         return PersonaMapper.toDto(persona);
     }
@@ -145,13 +153,12 @@ public class PersonaServiceImpl implements PersonaService {
     @Transactional
     public void deleteById(String nroDoc, Long idTipoDoc, Long idPais) throws BusinessException {
         if(nroDoc != null && !nroDoc.trim().isEmpty() && idTipoDoc != null && idTipoDoc > 0L && idPais != null && idPais > 0L){
-            Optional<PersonaEntity> optPersona = this.getPersonaById(nroDoc, idTipoDoc, idPais);
-            if(optPersona.isPresent()){
-                IdPersonaEntity idPersona = PersonaMapper.buildIdPersonaEntity(nroDoc, idTipoDoc, idPais);
-                this.repository.deleteById(idPersona);
-            }else{
+                Integer rowsDeleted = this.repository.deletePersona(nroDoc, idTipoDoc, idPais);
+            if(rowsDeleted == 0){
                 throw new BusinessException(404, "No se encontró registro de personas con los datos ingresados.");
             }
+        }else{
+            throw new BusinessException(400, "Los campos nroDoc, idTipoDoc, idPais no pueden ser nulos.");
         }
     }
 
