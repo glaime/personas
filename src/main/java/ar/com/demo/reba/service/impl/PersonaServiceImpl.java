@@ -132,7 +132,12 @@ public class PersonaServiceImpl implements PersonaService {
         this.validarPersona(body, accion);
         IdPersonaEntity idPersona = PersonaMapper.buildIdPersonaEntity(body.getNroDocumento(), body.getIdTipoDoc(), body.getIdPais());
         this.validarPaisyTipoDoc(idPersona);
-        PersonaEntity persona = this.repository.save(PersonaMapper.toEntity(body, idPersona));
+        PersonaEntity persona = PersonaMapper.toEntity(body, idPersona);
+        Integer rowsAffected = this.repository.createPersona(persona.getNombre(), persona.getApellido(), persona.getTipoDocumento().getId(),
+                persona.getNroDocumento(), persona.getPais().getId(), persona.getFechaNacimiento(), persona.getNroCel(), persona.getNroAlt());
+        if(rowsAffected == 0){
+            throw new BusinessException(500, "No se pudo insertar la persona.");
+        }
         return PersonaMapper.toDto(persona);
     }
 

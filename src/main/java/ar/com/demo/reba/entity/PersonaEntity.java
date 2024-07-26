@@ -1,7 +1,7 @@
 package ar.com.demo.reba.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -20,12 +20,12 @@ import java.util.Set;
 public class PersonaEntity implements Serializable {
 
     @Id
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
     @JoinColumn(name = "ID_TIPO_DOC", nullable = false)
     private TipoDocumentoEntity tipoDocumento;
 
     @Id
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
     @JoinColumn(name = "ID_PAIS", nullable = false)
     private PaisEntity pais;
 

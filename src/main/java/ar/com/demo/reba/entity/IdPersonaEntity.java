@@ -1,7 +1,5 @@
 package ar.com.demo.reba.entity;
 
-
-import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
