@@ -2,6 +2,7 @@ package ar.com.demo.reba.service.impl;
 
 import ar.com.demo.reba.entity.PersonaEntity;
 import ar.com.demo.reba.entity.RelacionPersonasEntity;
+import ar.com.demo.reba.exception.BusinessException;
 import ar.com.demo.reba.repository.RelacionPersonaRepository;
 import ar.com.demo.reba.service.PersonaService;
 import ar.com.demo.reba.service.RelacionService;
@@ -24,21 +25,63 @@ public class RelacionServiceImpl implements RelacionService {
 
 
     @Override
-    public String getRelacion(String nroDoc1, Long idTipoDoc1, Long idPais1, String nroDoc2, Long idTipoDoc2, Long idPais2) {
+    @Transactional
+    public String getRelacion(String nroDoc1, Long idTipoDoc1, Long idPais1, String nroDoc2, Long idTipoDoc2, Long idPais2) throws BusinessException {
+        if(this.isValid(nroDoc1,idTipoDoc1, idPais1) && this.isValid(nroDoc2, idTipoDoc2, idPais2)){
+            Optional<PersonaEntity> persona1 = this.personaService.getPersonaById(nroDoc1, idTipoDoc1, idPais1);
+            Optional<PersonaEntity> persona2 = this.personaService.getPersonaById(nroDoc2, idTipoDoc2, idPais2);
+            Optional<PersonaEntity> padrePersona1 = this.getPadre(nroDoc1, idTipoDoc1, idPais1);
+            Optional<PersonaEntity> padrePersona2 = this.getPadre(nroDoc2, idTipoDoc2, idPais2);
+            Optional<PersonaEntity> padreSegundo1 = Optional.empty();
+            Optional<PersonaEntity> padreSegundo2 = Optional.empty();
 
-        Optional<PersonaEntity> padrePersona1 = this.getPadre(nroDoc1, idTipoDoc1, idPais1);
-        Optional<PersonaEntity> padrePersona2 = this.getPadre(nroDoc2, idTipoDoc2, idPais2);
-
-        if(padrePersona1.get().getNroDocumento() != null && !padrePersona1.get().getNroDocumento().trim().isEmpty() &&
-                padrePersona1.get().getTipoDocumento().getId() != null && padrePersona1.get().getPais().getId() != null &&
-                padrePersona2.get().getNroDocumento() != null && !padrePersona2.get().getNroDocumento().trim().isEmpty() &&
-                padrePersona2.get().getTipoDocumento().getId() != null && padrePersona2.get().getPais().getId() != null){
-            if(padrePersona1.get().equals(padrePersona2.get())){
-                return "HERMAN@";
+            if(padrePersona1.isPresent()){
+                padreSegundo1 = this.getPadre(padrePersona1.get().getNroDocumento(),
+                        padrePersona1.get().getTipoDocumento().getId(), padrePersona1.get().getPais().getId());
             }
+            if(padrePersona2.isPresent()){
+                padreSegundo2 = this.getPadre(padrePersona2.get().getNroDocumento(),
+                        padrePersona2.get().getTipoDocumento().getId(), padrePersona2.get().getPais().getId());
+            }
+            if(persona1.isEmpty() || persona2.isEmpty()){
+                throw new BusinessException(400, "Una de las personas ingresadas no se encuentra registrada.");
+            }
+
+            if(persona1.get().equals(persona2.get())){
+                return "La persona es la misma.";
+            }
+
+            if(padrePersona1.isPresent() && padrePersona1.get().equals(persona2.get())){
+                return "HIJ@";
+            }
+
+            if(padrePersona2.isPresent() && padrePersona2.get().equals(persona1.get())){
+                    return "PADRE";
+            }
+
+            if(padrePersona1.isPresent() && padrePersona2.isPresent() && padrePersona1.get().equals(padrePersona2.get())){
+                    return "HERMAN@";
+            }else{
+                if (padreSegundo1.isPresent() && padreSegundo2.isPresent() && padreSegundo1.get().equals(padreSegundo2.get())){
+                    return "PRIM@";
+                }
+            }
+
+
+            if(padreSegundo2.isPresent() && padrePersona1.isPresent() && padrePersona1.get().equals(padreSegundo2.get())){
+                return "TI@";
+            }
+
+        } else {
+            throw new BusinessException(400, "Los identificadores de personas no pueden ser nulos");
         }
 
-        return null;
+        return "No hay registro de relación entre las personas.";
+    }
+
+    private boolean isValid(String nroDoc, Long idTipoDoc, Long idPais){
+        return nroDoc != null && !nroDoc.trim().isEmpty() && idTipoDoc != null && idTipoDoc > 0L
+                && idPais != null && idPais > 0L;
     }
 
 

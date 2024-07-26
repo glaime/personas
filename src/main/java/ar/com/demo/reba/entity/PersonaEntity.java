@@ -50,7 +50,4 @@ public class PersonaEntity implements Serializable {
     @Column(name = "NRO_ALT", length = 30)
     private String nroAlt;
 
-    @OneToMany(mappedBy = "personaPadre")
-    Set<RelacionPersonasEntity> relaciones;
-
 }

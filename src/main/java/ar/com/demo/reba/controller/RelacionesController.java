@@ -1,6 +1,7 @@
 package ar.com.demo.reba.controller;
 
 import ar.com.demo.reba.dto.response.ErrorResponseDTO;
+import ar.com.demo.reba.exception.BusinessException;
 import ar.com.demo.reba.service.RelacionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -46,6 +47,11 @@ public class RelacionesController {
             String rta = this.service.getRelacion(nroDoc1, idTipoDoc1, idPais1, nroDoc2, idTipoDoc2, idPais2);
             response.put("resultado", rta);
             return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (BusinessException ex){
+            log.error("Ocurrió un error al intentar insertar persona");
+            return new ResponseEntity<>(
+                    ErrorResponseDTO.builder().codigo(ex.getCode()).mensaje(ex.getMessage()).build(),
+                    HttpStatus.BAD_REQUEST);
         } catch (Exception ex){
             log.error("Ocurrió un error al obtener relacion entre 2 personas");
             return new ResponseEntity<>(
